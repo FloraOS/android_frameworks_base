@@ -27,7 +27,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.GosPackageState;
 import android.content.pm.GosPackageStateBase;
-import android.ext.KnownSystemPackages;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Process;
@@ -415,10 +414,7 @@ public class GosPackageStatePmHooks {
 
     // IPackageManagerImpl.clearApplicationUserData
     public static void onClearApplicationUserData(PackageManagerService pm, String packageName, int userId) {
-        if (packageName.equals(KnownSystemPackages.get(pm.getContext()).contactsProvider)) {
-            // discard IDs that refer to entries in the contacts provider database
-            clearContactScopesStorage(pm, userId);
-        }
+         /*stub*/
     }
 
     private static void clearContactScopesStorage(PackageManagerService pm, int userId) {
@@ -621,30 +617,6 @@ public class GosPackageStatePmHooks {
 
             Computer computer = pm.snapshotComputer();
 
-            KnownSystemPackages ksp = KnownSystemPackages.get(pm.getContext());
-
-            grantPermission(computer, ksp.mediaProvider,
-                    Permission.readOnly(FLAG_STORAGE_SCOPES_ENABLED, FIELD_STORAGE_SCOPES));
-
-            grantPermission(computer, ksp.contactsProvider,
-                    Permission.readOnly(FLAG_CONTACT_SCOPES_ENABLED, FIELD_CONTACT_SCOPES));
-
-            grantPermission(computer, ksp.launcher,
-                    Permission.readOnly(FLAG_STORAGE_SCOPES_ENABLED
-                                    | FLAG_CONTACT_SCOPES_ENABLED
-                            , 0,
-                            // work profile is handled by the launcher in profile's parent
-                            Permission.ALLOW_CROSS_PROFILE_READS));
-
-            grantPermission(computer, ksp.permissionController,
-                    Permission.readWrite(
-                            FLAG_STORAGE_SCOPES_ENABLED
-                                | FLAG_CONTACT_SCOPES_ENABLED
-                                | FLAG_HAS_PACKAGE_FLAGS
-                                ,FIELD_STORAGE_SCOPES
-                                | FIELD_CONTACT_SCOPES
-                                | FIELD_PACKAGE_FLAGS
-                    ));
 
             final int settingsReadWriteFlags =
                     FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY
@@ -678,12 +650,6 @@ public class GosPackageStatePmHooks {
             final int settingsWriteFlags = settingsReadWriteFlags;
 
             final int settingsReadFields = FIELD_PACKAGE_FLAGS;
-
-            // note that this applies to all packages that run in the android.uid.system sharedUserId
-            // in secondary users, not just the Settings app. Packages that run in this sharedUserId
-            // in the primary user get the fullPermission declared above
-            grantPermission(computer, ksp.settings,
-                    Permission.readWrite(settingsReadFlags, settingsWriteFlags, settingsReadFields, 0));
 
             final int systemUidWriteFlags = settingsWriteFlags
                     | FLAG_BLOCK_NATIVE_DEBUGGING_SUPPRESS_NOTIF

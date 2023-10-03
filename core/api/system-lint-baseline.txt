@@ -2201,6 +2201,22 @@ UnflaggedApi: android.ext.AppInfoExt#hasFlag(int):
     New API must be flagged with @FlaggedApi: method android.ext.AppInfoExt.hasFlag(int)
 UnflaggedApi: android.ext.AppInfoExt#writeToParcel(android.os.Parcel, int):
     New API must be flagged with @FlaggedApi: method android.ext.AppInfoExt.writeToParcel(android.os.Parcel,int)
+UnflaggedApi: android.ext.KnownSystemPackages:
+    New API must be flagged with @FlaggedApi: class android.ext.KnownSystemPackages
+UnflaggedApi: android.ext.KnownSystemPackages#contactsProvider:
+    New API must be flagged with @FlaggedApi: field android.ext.KnownSystemPackages.contactsProvider
+UnflaggedApi: android.ext.KnownSystemPackages#get(android.content.Context):
+    New API must be flagged with @FlaggedApi: method android.ext.KnownSystemPackages.get(android.content.Context)
+UnflaggedApi: android.ext.KnownSystemPackages#launcher:
+    New API must be flagged with @FlaggedApi: field android.ext.KnownSystemPackages.launcher
+UnflaggedApi: android.ext.KnownSystemPackages#mediaProvider:
+    New API must be flagged with @FlaggedApi: field android.ext.KnownSystemPackages.mediaProvider
+UnflaggedApi: android.ext.KnownSystemPackages#permissionController:
+    New API must be flagged with @FlaggedApi: field android.ext.KnownSystemPackages.permissionController
+UnflaggedApi: android.ext.KnownSystemPackages#settings:
+    New API must be flagged with @FlaggedApi: field android.ext.KnownSystemPackages.settings
+UnflaggedApi: android.ext.KnownSystemPackages#systemUi:
+    New API must be flagged with @FlaggedApi: field android.ext.KnownSystemPackages.systemUi
 UnflaggedApi: android.ext.PackageId:
     New API must be flagged with @FlaggedApi: class android.ext.PackageId
 UnflaggedApi: android.ext.PackageId#ANDROID_AUTO:
