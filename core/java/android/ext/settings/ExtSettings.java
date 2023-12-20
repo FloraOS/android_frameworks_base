@@ -25,6 +25,7 @@ import java.util.function.ToIntFunction;
  */
 public class ExtSettings {
 
+
     private ExtSettings() {}
 
     public static Function<Context, Boolean> defaultBool(@BoolRes int res) {
