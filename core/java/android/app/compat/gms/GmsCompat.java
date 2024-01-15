@@ -146,20 +146,23 @@ public final class GmsCompat {
 
         if (isPrivileged) {
             // don't enable GmsCompat for privileged GMS
-            return false;
+            Log.d(TAG, "isEnabledFor: Skiping privileged " + packageName);
+	    return false;
         }
 
-        return switch (packageId) {
-            case
-                PackageId.GMS_CORE,
-                PackageId.PLAY_STORE,
-                PackageId.G_SEARCH_APP,
-                PackageId.ANDROID_AUTO,
-                PackageId.G_CARRIER_SETTINGS ->
-                    true;
-            default ->
-                    false;
-        };
+	Log.d(TAG, "isEnabledFor: Checking package " + packageName + ", id=" + packageId);
+
+	if(packageId == PackageId.GMS_CORE 
+	   || packageId==PackageId.PLAY_STORE
+           || packageId==PackageId.G_SEARCH_APP	   
+	   || packageId==PackageId.ANDROID_AUTO
+	   || packageId==PackageId.G_CARRIER_SETTINGS){
+		Log.d(TAG, "isEnabledFor: GmsCompat is enabled for " + packageName);
+		return true;
+	   }else{
+		Log.d(TAG, "isEnabledFor: GmsCompat is disable for " + packageName + " (reason: wrong ID)");
+		return false;
+	   }
     }
 
     /** @hide */
