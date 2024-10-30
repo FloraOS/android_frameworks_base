@@ -32,6 +32,10 @@ import javax.inject.Inject
 interface StatusBarModeRepositoryStore {
     val defaultDisplay: StatusBarModePerDisplayRepository
     fun forDisplay(displayId: Int): StatusBarModePerDisplayRepository
+    /**
+     * @LineageExtension
+     */
+    //fun getDefaultDisplay() = defaultDisplay
 }
 
 @SysUISingleton

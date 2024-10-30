@@ -238,6 +238,7 @@ import com.android.systemui.util.concurrency.DelayableExecutor;
 import com.android.systemui.util.concurrency.MessageRouter;
 import com.android.systemui.util.kotlin.JavaAdapter;
 import com.android.systemui.volume.VolumeComponent;
+import com.android.systemui.statusbar.DarkStatusBarController;
 import com.android.wm.shell.bubbles.Bubbles;
 import com.android.wm.shell.startingsurface.SplashscreenContentDrawer;
 import com.android.wm.shell.startingsurface.StartingSurface;
@@ -601,6 +602,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
     private final EmergencyGestureIntentFactory mEmergencyGestureIntentFactory;
 
     private final ViewCaptureAwareWindowManager mViewCaptureAwareWindowManager;
+    private final DarkStatusBarController mDarkStatusBarController;
 
     /**
      * Public constructor for CentralSurfaces.
@@ -851,7 +853,9 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
 
         mViewCaptureAwareWindowManager = viewCaptureAwareWindowManager;
 
-        if (PredictiveBackSysUiFlag.isEnabled()) {
+	mDarkStatusBarController = new DarkStatusBarController(mStatusBarModeRepository.getDefaultDisplay());
+        
+	if (PredictiveBackSysUiFlag.isEnabled()) {
             mContext.getApplicationInfo().setEnableOnBackInvokedCallback(true);
         }
     }

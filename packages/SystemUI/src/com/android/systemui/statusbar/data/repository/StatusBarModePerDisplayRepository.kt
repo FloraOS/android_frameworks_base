@@ -104,6 +104,12 @@ interface StatusBarModePerDisplayRepository {
      *   determined internally instead.
      */
     fun clearTransient()
+
+    /**
+     * @lineage_extension
+     * Sets statusbar dark mode.
+     */
+    fun setDarkModeEnabled(value: Boolean)
 }
 
 class StatusBarModePerDisplayRepositoryImpl
@@ -116,7 +122,8 @@ constructor(
     ongoingCallRepository: OngoingCallRepository,
 ) : StatusBarModePerDisplayRepository, OnStatusBarViewInitializedListener, Dumpable {
 
-    private val commandQueueCallback =
+     private var forceOpaque = true;
+     private val commandQueueCallback =
         object : CommandQueue.Callbacks {
             override fun showTransient(
                 displayId: Int,
@@ -161,6 +168,7 @@ constructor(
                         letterboxDetails.toList(),
                     )
             }
+
         }
 
     fun start() {
@@ -183,6 +191,10 @@ constructor(
                 }
             }
         statusBarBoundsProvider.addChangeListener(listener)
+    }
+
+    override fun setDarkModeEnabled(isEnabled: Boolean){
+	forceOpaque = isEnabled;
     }
 
     override val isInFullscreenMode: StateFlow<Boolean> =
@@ -258,7 +270,9 @@ constructor(
         isInFullscreenMode: Boolean,
         hasOngoingCall: Boolean,
     ): StatusBarMode {
-        return when {
+        //return StatusBarMode.OPAQUE;
+	return when {
+	    forceOpaque -> StatusBarMode.OPAQUE
             hasOngoingCall && isInFullscreenMode -> StatusBarMode.SEMI_TRANSPARENT
             isTransientShown -> StatusBarMode.SEMI_TRANSPARENT
             else -> appearance.toBarMode()
@@ -267,8 +281,10 @@ constructor(
 
     @Appearance
     private fun Int.toBarMode(): StatusBarMode {
-        val lightsOutOpaque = APPEARANCE_LOW_PROFILE_BARS or APPEARANCE_OPAQUE_STATUS_BARS
+        //return StatusBarMode.OPAQUE;
+	val lightsOutOpaque = APPEARANCE_LOW_PROFILE_BARS or APPEARANCE_OPAQUE_STATUS_BARS
         return when {
+	    //this and forceOpaque -> StatusBarMode.OPAQUE
             this and lightsOutOpaque == lightsOutOpaque -> StatusBarMode.LIGHTS_OUT
             this and APPEARANCE_LOW_PROFILE_BARS != 0 -> StatusBarMode.LIGHTS_OUT_TRANSPARENT
             this and APPEARANCE_OPAQUE_STATUS_BARS != 0 -> StatusBarMode.OPAQUE
@@ -311,6 +327,7 @@ constructor(
         pw.println("${_originalStatusBarAttributes.value}")
         pw.println("${modifiedStatusBarAttributes.value}")
         pw.println("statusBarMode: ${statusBarMode.value}")
+	pw.println("forceOpaque: ${forceOpaque}")
     }
 
     /**
