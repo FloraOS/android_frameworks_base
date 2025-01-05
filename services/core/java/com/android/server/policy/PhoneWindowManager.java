@@ -2520,20 +2520,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         mLockPatternUtils = new LockPatternUtils(mContext);
         mLogger = new MetricsLogger();
 
-        mThreeFingersSwipe = new ThreeFingersSwipeListener(mContext, new ThreeFingersSwipeListener.Callbacks() {
-            @Override
-            public void onSwipeThreeFingers() {
-                if (mThreeFingersSwipeAction == Action.NOTHING)
-                    return;
-                long now = SystemClock.uptimeMillis();
-                KeyEvent event = new KeyEvent(now, now, KeyEvent.ACTION_DOWN,
-                        KeyEvent.KEYCODE_SYSRQ, 0, 0, KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
-                        KeyEvent.FLAG_FROM_SYSTEM, InputDevice.SOURCE_TOUCHSCREEN);
-                performKeyAction(mThreeFingersSwipeAction, event);
-                performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, "Three Fingers Swipe");
-            }
-        });
-
         mLineageHardware = LineageHardwareManager.getInstance(mContext);
 
         Resources res = mContext.getResources();
@@ -7121,6 +7107,20 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         if (mVrManagerInternal != null) {
             mVrManagerInternal.addPersistentVrModeStateListener(mPersistentVrModeListener);
         }
+
+        mThreeFingersSwipe = new ThreeFingersSwipeListener(mContext, new ThreeFingersSwipeListener.Callbacks() {
+            @Override
+            public void onSwipeThreeFingers() {
+                if (mThreeFingersSwipeAction == Action.NOTHING)
+                    return;
+                long now = SystemClock.uptimeMillis();
+                KeyEvent event = new KeyEvent(now, now, KeyEvent.ACTION_DOWN,
+                        KeyEvent.KEYCODE_SYSRQ, 0, 0, KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
+                        KeyEvent.FLAG_FROM_SYSTEM, InputDevice.SOURCE_TOUCHSCREEN);
+                performKeyAction(mThreeFingersSwipeAction, event);
+                performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, "Three Fingers Swipe");
+            }
+        });
 
         // Ensure observe happens in systemReady() since we need
         // LineageHardwareService to be up and running
