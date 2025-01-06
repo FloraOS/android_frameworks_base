@@ -6,8 +6,8 @@ import com.android.systemui.statusbar.data.repository.StatusBarModePerDisplayRep
 import javax.inject.Inject;
 
 /**
- * @LineageExtension
  * Controls the dark status bar feature.
+ * @LineageExtension
  */
 public class DarkStatusBarController implements TunerService.Tunable {
 

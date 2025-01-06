@@ -195,6 +195,7 @@ import com.android.systemui.statusbar.NotificationPresenter;
 import com.android.systemui.statusbar.NotificationRemoteInputManager;
 import com.android.systemui.statusbar.NotificationShadeDepthController;
 import com.android.systemui.statusbar.NotificationShadeWindowController;
+import com.android.systemui.statusbar.NotificationListener;
 import com.android.systemui.statusbar.PowerButtonReveal;
 import com.android.systemui.statusbar.PulseExpansionHandler;
 import com.android.systemui.statusbar.StatusBarState;
@@ -234,6 +235,7 @@ import com.android.systemui.util.concurrency.MessageRouter;
 import com.android.systemui.util.kotlin.JavaAdapter;
 import com.android.systemui.volume.VolumeComponent;
 import com.android.systemui.statusbar.DarkStatusBarController;
+import com.android.systemui.statusbar.OnGoingActionProgressController;
 import com.android.wm.shell.bubbles.Bubbles;
 import com.android.wm.shell.startingsurface.SplashscreenContentDrawer;
 import com.android.wm.shell.startingsurface.StartingSurface;
@@ -378,6 +380,11 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
     DozeServiceHost mDozeServiceHost;
     private final LightRevealScrim mLightRevealScrim;
     private PowerButtonReveal mPowerButtonReveal;
+
+    private OnGoingActionProgressController mOnGoingActionProgressController = null;
+
+    @Inject
+    public NotificationListener mNotificationListener;
 
     /**
      * Whether we should delay the wakeup animation (which shows the notifications and moves the
@@ -592,7 +599,9 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
     private final EmergencyGestureIntentFactory mEmergencyGestureIntentFactory;
 
     private final ViewCaptureAwareWindowManager mViewCaptureAwareWindowManager;
+
     private final DarkStatusBarController mDarkStatusBarController;
+
 
     /**
      * Public constructor for CentralSurfaces.
@@ -1215,7 +1224,6 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
             // Set up CollapsedStatusBarFragment and PhoneStatusBarView
             mStatusBarInitializer.setStatusBarViewUpdatedListener(
                     (statusBarViewController, statusBarTransitions) -> {
-
                         mPhoneStatusBarViewController = statusBarViewController;
                         mStatusBarTransitions = statusBarTransitions;
                         getNotificationShadeWindowViewController()
@@ -1228,7 +1236,8 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
                         mShadeSurface.updateExpansionAndVisibility();
                         setBouncerShowingForStatusBarComponents(mBouncerShowing);
                         checkBarModes();
-                    });
+                        mOnGoingActionProgressController = new OnGoingActionProgressController(mContext, statusBarViewController.getView(), mNotificationListener);
+		    });
         }
         if (!StatusBarRootModernization.isEnabled() && !StatusBarConnectedDisplays.isEnabled()) {
             // When the flag is on, we register the fragment as a core startable and this is not

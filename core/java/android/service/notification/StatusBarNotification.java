@@ -90,6 +90,8 @@ public class StatusBarNotification implements Parcelable {
         this.overrideGroupKey = overrideGroupKey;
         this.key = key();
         this.groupKey = groupKey();
+
+
     }
 
     /**
