@@ -144,7 +144,7 @@ public final class GmsHooks {
 
             ApplicationInfo ai = ctx.getApplicationInfo();
             aer.packageName = ai.packageName;
-            aer.applicationInfo = ai;
+            //aer.applicationInfo = ai;
             aer.processName = Application.getProcessName();
 
             // In some cases, GMS kills its process when it receives an uncaught exception, which

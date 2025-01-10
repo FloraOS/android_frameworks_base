@@ -94,11 +94,6 @@ public abstract class AppSwitch {
             AppInfoExt aie = appInfo.ext();
             if (aie.hasCompatConfig()) {
                 boolean res = !aie.hasCompatChange(compatChangeForOff);
-                if (res || ExtSettings.ALLOW_DISABLING_HARDENING_VIA_APP_COMPAT_CONFIG.get(ctx, userId)) {
-                    si.defaultValueReason = res ?
-                            DVR_APP_COMPAT_CONFIG_HARDENING_OPT_IN : DVR_APP_COMPAT_CONFIG_HARDENING_OPT_OUT;
-                    return res;
-                }
             }
         }
 
