@@ -109,6 +109,7 @@ import com.android.permission.persistence.RuntimePermissionsPersistence;
 import com.android.permission.persistence.RuntimePermissionsState;
 import com.android.server.LocalServices;
 import com.android.server.backup.PreferredActivityBackupHelper;
+import com.android.server.ext.PackageManagerHooks;
 import com.android.server.pm.Installer.InstallerException;
 import com.android.server.pm.parsing.PackageInfoUtils;
 import com.android.server.pm.permission.LegacyPermissionDataProvider;
@@ -117,6 +118,7 @@ import com.android.server.pm.permission.LegacyPermissionState;
 import com.android.server.pm.permission.LegacyPermissionState.PermissionState;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.ArchiveState;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.PackageUserState;
 import com.android.server.pm.pkg.PackageUserStateInternal;
@@ -1157,7 +1159,8 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
                                 null /*splashscreenTheme*/,
                                 0 /*firstInstallTime*/,
                                 PackageManager.USER_MIN_ASPECT_RATIO_UNSET,
-                                null /*archiveState*/
+                                null /*archiveState*/,
+                                null /*gosPackageState*/
                         );
                     }
                 }
@@ -1857,7 +1860,8 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
                                     null /* splashScreenTheme*/,
                                     0 /*firstInstallTime*/,
                                     PackageManager.USER_MIN_ASPECT_RATIO_UNSET,
-                                    null /*archiveState*/
+                                    null /*archiveState*/,
+                                    null /*gosPackageState*/
                             );
                         }
                         return;
@@ -1936,8 +1940,11 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
                                 parser.getAttributeBoolean(null, ATTR_INSTANT_APP, false);
                         final boolean virtualPreload =
                                 parser.getAttributeBoolean(null, ATTR_VIRTUAL_PRELOAD, false);
-                        final int enabled = parser.getAttributeInt(null, ATTR_ENABLED,
-                                COMPONENT_ENABLED_STATE_DEFAULT);
+                        final Integer enabledOverride = ps.isSystem() ?
+                                PackageManagerHooks.maybeOverrideSystemPackageEnabledSetting(name, userId) : null;
+                        final int enabled = (enabledOverride != null) ?
+                                enabledOverride.intValue() :
+                                parser.getAttributeInt(null, ATTR_ENABLED, COMPONENT_ENABLED_STATE_DEFAULT);
                         final String enabledCaller = parser.getAttributeValue(null,
                                 ATTR_ENABLED_CALLER);
                         final String harmfulAppWarning =
@@ -1957,6 +1964,8 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
                         final int minAspectRatio = parser.getAttributeInt(null,
                                 ATTR_MIN_ASPECT_RATIO,
                                 PackageManager.USER_MIN_ASPECT_RATIO_UNSET);
+
+                        final GosPackageStatePm gosPackageState = GosPackageStatePmHooks.deserialize(parser);
 
                         ArraySet<String> enabledComponents = null;
                         ArraySet<String> disabledComponents = null;
@@ -2038,7 +2047,7 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
                                 harmfulAppWarning, splashScreenTheme,
                                 firstInstallTime != 0 ? firstInstallTime
                                         : origFirstInstallTimes.getOrDefault(name, 0L),
-                                minAspectRatio, archiveState);
+                                minAspectRatio, archiveState, gosPackageState);
                         mDomainVerificationManager.setLegacyUserState(name, userId, verifState);
                     } else if (tagName.equals("preferred-activities")) {
                         readPreferredActivitiesLPw(parser, userId);
@@ -2455,6 +2464,9 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
                             serializer.attributeInt(null, ATTR_MIN_ASPECT_RATIO,
                                     ustate.getMinAspectRatio());
                         }
+
+                        GosPackageStatePmHooks.serialize(ustate, serializer);
+
                         if (ustate.isSuspended()) {
                             for (int i = 0; i < ustate.getSuspendParams().size(); i++) {
                                 final UserPackage suspendingPackage =

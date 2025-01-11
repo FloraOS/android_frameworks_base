@@ -87,6 +87,7 @@ import android.content.pm.DataLoaderType;
 import android.content.pm.FallbackCategoryProvider;
 import android.content.pm.FeatureInfo;
 import android.content.pm.Flags;
+import android.content.pm.GosPackageState;
 import android.content.pm.IDexModuleRegisterCallback;
 import android.content.pm.IOnChecksumsReadyListener;
 import android.content.pm.IPackageDataObserver;
@@ -214,6 +215,7 @@ import com.android.server.art.DexUseManagerLocal;
 import com.android.server.art.model.DeleteResult;
 import com.android.server.compat.CompatChange;
 import com.android.server.compat.PlatformCompat;
+import com.android.server.ext.PackageManagerHooks;
 import com.android.server.pm.Installer.InstallerException;
 import com.android.server.pm.Settings.VersionInfo;
 import com.android.server.pm.dex.ArtManagerService;
@@ -228,8 +230,10 @@ import com.android.server.pm.permission.LegacyPermissionManagerService;
 import com.android.server.pm.permission.LegacyPermissionSettings;
 import com.android.server.pm.permission.PermissionManagerService;
 import com.android.server.pm.permission.PermissionManagerServiceInternal;
+import com.android.server.pm.permission.SpecialRuntimePermUtils;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.ArchiveState;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageState;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.PackageUserState;
@@ -3975,7 +3979,8 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
                 final AndroidPackage pkg = pkgSettings.get(packageName).getPkg();
                 if (pkg == null || !AndroidPackageUtils.hasComponentClassName(pkg, className)) {
                     if (pkg != null
-                            && pkg.getTargetSdkVersion() >= Build.VERSION_CODES.JELLY_BEAN) {
+                            && pkg.getTargetSdkVersion() >= Build.VERSION_CODES.JELLY_BEAN
+                            && (setting.getEnabledFlags() & PackageManager.SKIP_IF_MISSING) == 0) {
                         throw new IllegalArgumentException("Component class " + className
                                 + " does not exist in " + packageName);
                     } else {
@@ -4365,6 +4370,8 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
         if (dexUseManager != null) {
             dexUseManager.systemReady();
         }
+
+        GosPackageStatePmHooks.init(this);
     }
 
     //TODO: b/111402650
@@ -4820,6 +4827,10 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
             mHandler.post(new Runnable() {
                 public void run() {
                     mHandler.removeCallbacks(this);
+
+                    GosPackageStatePmHooks.onClearApplicationUserData(
+                            PackageManagerService.this, packageName, userId);
+
                     final boolean succeeded;
                     try (PackageFreezer freezer = freezePackage(packageName, UserHandle.USER_ALL,
                             "clearApplicationUserData",
@@ -6638,6 +6649,89 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
                     getPerUidReadTimeouts(snapshot), mSnapshotStatistics
             ).doDump(snapshot, fd, pw, args);
         }
+
+        @Nullable
+        @Override
+        public Bundle getExtraAppBindArgs(String packageName) {
+            return PackageManagerHooks.getExtraAppBindArgs(PackageManagerService.this, packageName);
+        }
+
+        @Override
+        public void skipSpecialRuntimePermissionAutoGrantsForPackage(String packageName, int userId, List<String> permissions) {
+            mContext.enforceCallingPermission(Manifest.permission.INSTALL_PACKAGES, null);
+            SpecialRuntimePermUtils.skipAutoGrantsForPackage(packageName, userId, permissions);
+        }
+
+        @Override
+        public GosPackageState getGosPackageState(@NonNull String packageName, int userId) {
+            return GosPackageStatePmHooks.get(PackageManagerService.this, packageName, userId);
+        }
+
+        @Override
+        public boolean setGosPackageState(@NonNull String packageName, int userId,
+                                                  @NonNull GosPackageState updatedPs, int editorFlags) {
+            return GosPackageStatePmHooks.set(PackageManagerService.this, packageName, userId,
+                    updatedPs, editorFlags);
+        }
+
+        // Allow privileged installer to search for packages across all users to let it avoid
+        // redownloading APKs for packages that are already installed in other user profiles,
+        // and to avoid potential downgrade errors (when other user has a newer package version).
+
+        // Note that even without this method, package installers (including unprivileged ones) can
+        // detect the presence and version code of a package that is not installed for the current user
+        // by looking at error codes that PackageManager returns after attempt to install a package
+        // with the same package name. Such packages can be generated at runtime by the installer.
+        @Override
+        public PackageInfo findPackage(String packageName, long minVersion, Bundle validSignaturesSha256) {
+            mContext.enforceCallingPermission(Manifest.permission.INSTALL_PACKAGES, null);
+
+            PackageStateInternal psi = snapshot().getPackageStateInternal(packageName);
+            if (psi == null) {
+                return null;
+            }
+
+            AndroidPackage pkg = psi.getPkg();
+
+            if (pkg == null) {
+                return null;
+            }
+
+            long version = pkg.getLongVersionCode();
+
+            if (version < minVersion) {
+                return null;
+            }
+
+            // no simple way to pass byte[][] array directly due to AIDL limitation
+            final int numSignatures = validSignaturesSha256.getInt("len");
+
+            boolean signatureMatch = false;
+
+            for (int i = 0; i < numSignatures; ++i) {
+                byte[] signatureSha256 = validSignaturesSha256.getByteArray(Integer.toString(i));
+                if (pkg.getSigningDetails().hasSha256Certificate(signatureSha256)) {
+                    signatureMatch = true;
+                    break;
+                }
+            }
+
+            if (!signatureMatch) {
+                return null;
+            }
+
+            var pi = new PackageInfo();
+            pi.setLongVersionCode(version);
+            pi.versionName = pkg.getVersionName();
+            pi.applicationInfo = new ApplicationInfo();
+            pi.applicationInfo.setBaseCodePath(pkg.getBaseApkPath());
+            pi.applicationInfo.setSplitCodePaths(pkg.getSplitCodePaths());
+
+            if (psi.isSystem()) {
+                pi.applicationInfo.flags |= ApplicationInfo.FLAG_SYSTEM;
+            }
+            return pi;
+        }
     }
 
     private class PackageManagerInternalImpl extends PackageManagerInternalBase {
@@ -7223,6 +7317,12 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
             final boolean isUpgrading = mPriorSdkVersion != -1;
             return isUpgrading && mPriorSdkVersion < sdkVersion;
         }
+
+        @Nullable
+        @Override
+        public GosPackageStatePm getGosPackageState(String packageName, int userId) {
+            return GosPackageStatePm.get(PackageManagerService.this, packageName, userId);
+        }
     }
 
     private void setEnabledOverlayPackages(@UserIdInt int userId,
@@ -7518,7 +7618,21 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
             boolean retainOnUpdate) {
         final AndroidPackage visiblePackage = snapshot.getPackage(visibleUid);
         final int recipientUid = UserHandle.getUid(userId, recipientAppId);
-        if (visiblePackage == null || snapshot.getPackage(recipientUid) == null) {
+        final AndroidPackage recipientPackage = snapshot.getPackage(recipientUid);
+        if (visiblePackage == null || recipientPackage == null) {
+            return;
+        }
+
+        final PackageStateInternal recipientPsi = snapshot.getPackageStateInternal(
+                recipientPackage.getPackageName(), Process.SYSTEM_UID);
+        final PackageStateInternal visiblePsi = snapshot.getPackageStateInternal(
+                visiblePackage.getPackageName(), Process.SYSTEM_UID);
+        if (recipientPsi == null || visiblePsi == null) {
+            return;
+        }
+
+        if (PackageManagerHooks.shouldFilterApplication(recipientPsi, null, userId,
+                visiblePsi, UserHandle.getUserId(visibleUid))) {
             return;
         }
 
@@ -8169,5 +8283,10 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
     private static boolean isSystemOrPhone(int uid) {
         return UserHandle.isSameApp(uid, Process.SYSTEM_UID)
                 || UserHandle.isSameApp(uid, Process.PHONE_UID);
+    }
+
+    @NonNull
+    public Context getContext() {
+        return mContext;
     }
 }

@@ -64,6 +64,7 @@ import android.util.SparseArray;
 import android.util.Xml;
 
 import com.android.internal.R;
+import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.XmlUtils;
 import com.android.modules.utils.TypedXmlPullParser;
@@ -845,6 +846,7 @@ final class DefaultPermissionGrantPolicy {
                         ACTIVITY_RECOGNITION_PERMISSIONS);
             }
         }
+        grantPermissionsToSystemPackage(pm, GmsCompatApp.PKG_NAME, userId, NOTIFICATION_PERMISSIONS);
 
         // Music
         Intent musicIntent = new Intent(Intent.ACTION_VIEW)
@@ -1103,7 +1105,7 @@ final class DefaultPermissionGrantPolicy {
     public void grantDefaultPermissionsToActiveLuiApp(String packageName, int userId) {
         Log.i(TAG, "Granting permissions to active LUI app for user:" + userId);
         grantSystemFixedPermissionsToSystemPackage(NO_PM_CACHE, packageName, userId,
-                CAMERA_PERMISSIONS, NOTIFICATION_PERMISSIONS);
+                NOTIFICATION_PERMISSIONS);
     }
 
     public void revokeDefaultPermissionsFromLuiApps(String[] packageNames, int userId) {

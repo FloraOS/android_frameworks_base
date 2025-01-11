@@ -848,4 +848,14 @@ interface IPackageManager {
     int getAppMetadataSource(String packageName, int userId);
 
     ComponentName getDomainVerificationAgent(int userId);
+
+    @nullable Bundle getExtraAppBindArgs(String packageName);
+
+    void skipSpecialRuntimePermissionAutoGrantsForPackage(String packageName, int userId, in List<String> permissions);
+
+    android.content.pm.GosPackageState getGosPackageState(String packageName, int userId);
+
+    boolean setGosPackageState(String packageName, int userId, in android.content.pm.GosPackageState updatedPs, int editorFlags);
+
+    PackageInfo findPackage(String packageName, long minVersion, in Bundle validSignaturesSha256);
 }

@@ -253,6 +253,7 @@ import android.app.assist.ActivityId;
 import android.app.backup.BackupAnnotations.BackupDestination;
 import android.app.backup.IBackupManager;
 import android.app.compat.CompatChanges;
+import android.app.compat.gms.GmsCompat;
 import android.app.job.JobParameters;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageEvents.Event;
@@ -279,6 +280,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ActivityPresentationInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.ApplicationInfo.HiddenApiEnforcementPolicy;
+import android.content.pm.GosPackageState;
 import android.content.pm.IPackageDataObserver;
 import android.content.pm.IPackageManager;
 import android.content.pm.IncrementalStatesInfo;
@@ -13768,6 +13770,10 @@ public class ActivityManagerService extends IActivityManager.Stub
                 if (ActivityManager.checkUidPermission(
                         INTERACT_ACROSS_USERS,
                         aInfo.uid) != PackageManager.PERMISSION_GRANTED) {
+                    if (GmsCompat.isEnabledFor(aInfo)) {
+                        return false;
+                    }
+
                     ComponentName comp = new ComponentName(aInfo.packageName, className);
                     String msg = "Permission Denial: Component " + comp.flattenToShortString()
                             + " requests FLAG_SINGLE_USER, but app does not hold "
@@ -17958,6 +17964,13 @@ public class ActivityManagerService extends IActivityManager.Stub
                         /* doit= */ true, /* evenPersistent= */ false,
                         /* uninstalling= */ false, /* packageStateStopped= */ false,
                         userId, reason, exitInfoReason);
+            }
+        }
+
+        @Override
+        public void onGosPackageStateChanged(int uid, @Nullable GosPackageState state) {
+            synchronized (mProcLock) {
+                mProcessList.onGosPackageStateChangedLOSP(uid, state);
             }
         }
     }
