@@ -673,12 +673,12 @@ public final class SystemServer implements Dumpable {
      * The main entry point from zygote.
      */
     public static void main(String[] args) {
-        new SystemServer().run();
+         ParsingPackageUtils.setPackageExtInitSupplier(PackageExtInit::new);
+	 new SystemServer().run();
     }
 
     static {
         PackageImpl.packageParsingHooksSupplier = PackageHooksRegistry::getParsingHooks;
-        ParsingPackageUtils.packageExtInitSupplier = PackageExtInit::new;
         ParsingPackageUtils.gmsCompatClientServiceSupplier = GmsCompatPkgParsingHooks::maybeCreateClientService;
     }
 

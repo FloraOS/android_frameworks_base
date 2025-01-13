@@ -301,6 +301,7 @@ public class ParsingPackageUtils {
     public ParsingPackageUtils(String[] separateProcesses, DisplayMetrics displayMetrics,
             @NonNull List<PermissionManager.SplitPermissionInfo> splitPermissions,
             @NonNull Callback callback) {
+	Log.d(TAG, "Initialized ParsingPackageUtils");
         mSeparateProcesses = separateProcesses;
         mDisplayMetrics = displayMetrics;
         mSplitPermissionInfos = splitPermissions;
@@ -642,9 +643,11 @@ public class ParsingPackageUtils {
                 pkgExtInit = pkgExtInitSupplier.invoke(input, pkg, (flags & PARSE_IS_SYSTEM_DIR) != 0);
                 if (pkgExtInit != null) {
                     pkgExtInit.run();
-                }
+                } else {
+		    Log.wtf(TAG, "pkgExtInit==null!!!");
+		}
             } else {
-		Log.wtf(TAG, "pkgExtInit==null");
+		Log.wtf(TAG, "pkgExtInitSupplier==null!!!");
 	    }
 
             if ((flags & PARSE_COLLECT_CERTIFICATES) != 0) {
@@ -674,8 +677,21 @@ public class ParsingPackageUtils {
     }
 
     @Nullable
-    public static PackageExtInitSupplier packageExtInitSupplier;
+    private static PackageExtInitSupplier packageExtInitSupplier;
 
+    public static void setPackageExtInitSupplier(PackageExtInitSupplier supplier){
+	    Log.d(TAG, "setPackageExtInitSupplier: supplier is " + supplier);
+	    if(supplier == null){
+		    Log.wtf(TAG, "setPackageExtInitSupplier: supplier==null!");
+	    }
+	    if(packageExtInitSupplier == null){
+		    packageExtInitSupplier = supplier;
+	    } else {
+		    Log.wtf(TAG, "packageExtInitSupplier is set!!!");
+	    }
+
+    }
+		    
     public interface PackageExtInitIface {
         void run();
         ParseResult<SigningDetails> getSigningDetailsParseResult();
@@ -860,7 +876,7 @@ public class ParsingPackageUtils {
             }
         } finally {
             sa.recycle();
-        }
+        }	
 
         // If the loaded component did not specify a split, inherit the split name
         // based on the split it is defined in.
