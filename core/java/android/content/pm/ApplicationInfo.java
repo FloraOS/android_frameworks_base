@@ -44,6 +44,7 @@ import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.Printer;
 import android.util.SparseArray;
+import android.util.Log;
 import android.util.proto.ProtoOutputStream;
 import android.window.OnBackInvokedCallback;
 
@@ -2925,7 +2926,10 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
 
     /** @hide */
     public void setExt(AppInfoExt ext) {
-        this.ext = ext;
+        if(ext.packageId != 0){
+		Log.d("ApplicationInfo", "setExt: packageId=" + ext.packageId);
+	}
+	this.ext = ext;
     }
 
     /** @hide */

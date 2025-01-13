@@ -8,6 +8,7 @@ import android.ext.AppInfoExt;
 import android.ext.PackageId;
 import android.os.Bundle;
 import android.util.Slog;
+import android.util.Log;
 
 import com.android.internal.pm.parsing.pkg.PackageImpl;
 import com.android.internal.pm.pkg.parsing.ParsingPackage;
@@ -44,7 +45,7 @@ public class PackageExtInit implements ParsingPackageUtils.PackageExtInitIface {
         int packageId = getPackageId();
 
         if (packageId != UNKNOWN) {
-            Slog.d(TAG, "set packageId of " +  pkg.getPackageName() + " to " + packageId);
+            Log.d(TAG, "set packageId of " +  pkg.getPackageName() + " to " + packageId);
         }
 
         var ext = new PackageExt(packageId, getExtFlags());
@@ -66,6 +67,7 @@ public class PackageExtInit implements ParsingPackageUtils.PackageExtInitIface {
     }
 
     private int getPackageId() {
+	Log.d(TAG, "getPackageId(), pkg=" + pkg.getPackageName());
         return switch (pkg.getPackageName()) {
             case GMS_CORE_NAME -> validate(GMS_CORE, 21_00_00_000L, mainGmsCerts());
             case PLAY_STORE_NAME -> validate(PLAY_STORE, 0L, mainGmsCerts());
@@ -113,7 +115,7 @@ public class PackageExtInit implements ParsingPackageUtils.PackageExtInitIface {
 
     private int validate(int packageId, long minVersionCode, String... validCertificatesSha256) {
         if (pkg.getLongVersionCode() < minVersionCode) {
-            Slog.d(TAG, "minVersionCode check failed, pkgName " + pkg.getPackageName() + "," +
+            Log.d(TAG, "minVersionCode check failed, pkgName " + pkg.getPackageName() + "," +
                     " pkgVersion: " + pkg.getLongVersionCode());
             return PackageId.UNKNOWN;
         }
@@ -125,7 +127,7 @@ public class PackageExtInit implements ParsingPackageUtils.PackageExtInitIface {
             signingDetailsParseResult = result;
 
             if (result.isError()) {
-                Slog.e(TAG, "unable to parse SigningDetails for " + parsingPackage.getPackageName()
+                Log.e(TAG, "unable to parse SigningDetails for " + parsingPackage.getPackageName()
                         + "; code " + result.getErrorCode() + "; msg " + result.getErrorMessage(),
                         result.getException());
                 return PackageId.UNKNOWN;
@@ -141,7 +143,7 @@ public class PackageExtInit implements ParsingPackageUtils.PackageExtInitIface {
             }
         }
 
-        Slog.d(TAG, "SigningDetails of " + pkg.getPackageName() + " don't contain any of known certificates");
+        Log.d(TAG, "SigningDetails of " + pkg.getPackageName() + " don't contain any of known certificates");
 
         return PackageId.UNKNOWN;
     }

@@ -86,6 +86,7 @@ import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.util.TypedValue;
 import android.util.apk.ApkSignatureVerifier;
+import android.util.Log;
 
 import com.android.internal.R;
 import com.android.internal.os.ClassLoaderFactory;
@@ -642,7 +643,9 @@ public class ParsingPackageUtils {
                 if (pkgExtInit != null) {
                     pkgExtInit.run();
                 }
-            }
+            } else {
+		Log.wtf(TAG, "pkgExtInit==null");
+	    }
 
             if ((flags & PARSE_COLLECT_CERTIFICATES) != 0) {
                 // skip reparsing certificates if they were already parsed by PackageExtInit

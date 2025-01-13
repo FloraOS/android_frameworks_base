@@ -3,6 +3,7 @@ package com.android.server.pm.ext;
 import android.ext.AppInfoExt;
 import android.ext.PackageId;
 import android.os.Parcel;
+import android.util.Log;
 
 import com.android.internal.pm.parsing.pkg.PackageExtIface;
 import com.android.internal.pm.parsing.pkg.PackageImpl;
@@ -13,6 +14,7 @@ import com.android.server.pm.pkg.AndroidPackage;
 public class PackageExt implements PackageExtIface {
     public static final PackageExt DEFAULT = new PackageExt(PackageId.UNKNOWN, 0);
 
+    private static final String TAG = "PakcageExt";
     private final int packageId;
     private final int flags;
 
@@ -59,14 +61,17 @@ public class PackageExt implements PackageExtIface {
         if (def) {
             return;
         }
+	Log.d(TAG, "write packageId " + this.packageId);
         dest.writeInt(this.packageId);
         dest.writeInt(this.flags);
     }
 
     public static PackageExt createFromParcel(PackageImpl pkg, Parcel p) {
         if (p.readBoolean()) {
+	    Log.d(TAG, "PackageExt: default ext for " + pkg.getPackageName());
             return DEFAULT;
         }
+	Log.d(TAG, "PackageExt: non-default ext for " + pkg.getPackageName());
         return new PackageExt(p.readInt(), p.readInt());
     }
 }
