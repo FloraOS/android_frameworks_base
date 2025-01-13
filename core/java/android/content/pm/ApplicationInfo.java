@@ -2926,8 +2926,8 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
 
     /** @hide */
     public void setExt(AppInfoExt ext) {
-        if(ext.packageId != 0){
-		Log.d("ApplicationInfo", "setExt: packageId=" + ext.packageId);
+        if(ext.getPackageId() != 0){
+		Log.d("ApplicationInfo", "setExt: packageId=" + ext.getPackageId());
 	}
 	this.ext = ext;
     }
