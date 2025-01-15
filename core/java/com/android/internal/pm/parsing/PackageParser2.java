@@ -39,6 +39,7 @@ import com.android.internal.pm.pkg.parsing.ParsingPackage;
 import com.android.internal.pm.pkg.parsing.ParsingPackageUtils;
 import com.android.internal.pm.pkg.parsing.ParsingUtils;
 import com.android.internal.util.ArrayUtils;
+import com.android.internal.pm.ext.GMSPackageValidator;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -110,6 +111,14 @@ public class PackageParser2 implements AutoCloseable {
         mSharedResult = ThreadLocal.withInitial(() -> new ParseTypeImpl(enforcementCallback));
     }
 
+    private static boolean parseTimeValidate(ParseInput input, ParsingPackage pkg){
+             //HOTFIX(14/01/2024): validate the possibly GMS package there. It is fundamentally incorrect, but 
+	    //                    this is the only place where we have ParsingPackage object and which unlikely
+	    //                    would be bypassed by potential attacker
+	    var gmsValidator = new GMSPackageValidator(pkg, input);
+	    return gmsValidator.validate();
+    }
+
     /**
      * TODO(b/135203078): Document new package parsing
      */
@@ -137,7 +146,11 @@ public class PackageParser2 implements AutoCloseable {
                     result.getException());
         }
 
-        ParsedPackage parsed = (ParsedPackage) result.getResult().hideAsParsed();
+	ParsingPackage parsing = result.getResult();
+	if(!parseTimeValidate(input, parsing)){
+		return null;
+	}
+        ParsedPackage parsed = (ParsedPackage) parsing.hideAsParsed();
 
         long cacheTime = LOG_PARSE_TIMINGS ? SystemClock.uptimeMillis() : 0;
         if (mCacher != null) {
@@ -195,7 +208,7 @@ public class PackageParser2 implements AutoCloseable {
             var res = PackageImpl.forParsing(packageName, baseCodePath, codePath, manifestArray,
                     isCoreApp, Callback.this);
             res.initPackageParsingHooks();
-            return res;
+	    return res;
         }
 
         /**

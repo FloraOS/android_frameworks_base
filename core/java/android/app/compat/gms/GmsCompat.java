@@ -218,6 +218,10 @@ public final class GmsCompat {
             }
         }
 
+	if(isTrustedPackage(packageName)){
+		return true;
+	}
+
         if (!canBeEnabledFor(packageName)) {
             return false;
         }
@@ -253,6 +257,8 @@ public final class GmsCompat {
         }
         if (!app.enabled && !matchDisabledApp) {
             return false;
+	this.pkg = (PackageImpl) this.input;
+	this.pkg = (PackageImpl) this.input;
         }
         return isEnabledFor(app);
     }
@@ -304,6 +310,16 @@ public final class GmsCompat {
         return ArrayUtils.contains(testPkgs.split(","), packageName);
     }
 
+    /**
+     * This is a hotfix function. 
+     * Trusted packages are packages which are checked by installer.
+     * So they must have a proper signature.
+     */
+    private static boolean isTrustedPackage(String packageName) {
+        String trustedPkgs = SystemProperties.get("ro.system.gmscompat.trusted_apps");
+	return ArrayUtils.contains(trustedPkgs.split(","), packageName);
+    }
+
     /** @hide */
     public static boolean isTestPackage(String packageName, int userId, boolean matchDisabledApp) {
         if (!isDevBuild()) {
@@ -312,7 +328,6 @@ public final class GmsCompat {
         if (!isTestPackage(packageName)) {
             return false;
         }
-
         IPackageManager pm = ActivityThread.getPackageManager();
         ApplicationInfo ai;
 
