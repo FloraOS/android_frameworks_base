@@ -59,7 +59,6 @@ public class IconFetcher {
      * @return A monotonic Drawable of the app icon or standard app icon within AdaptiveDrawableResult
      */
      public AdaptiveDrawableResult getMonotonicPackageIcon(String packageName) {
-	int tintColor = Color.WHITE;
         try {
             PackageManager packageManager = mContext.getPackageManager();
             Drawable icon = packageManager.getApplicationIcon(packageName);
@@ -69,7 +68,6 @@ public class IconFetcher {
 
                 Drawable foreground = adaptiveIcon.getForeground();
 
-                foreground.setColorFilter(new PorterDuffColorFilter(tintColor, PorterDuff.Mode.SRC_IN));
                 return new AdaptiveDrawableResult(true, icon);
             } else {
                 return new AdaptiveDrawableResult(false, icon);
