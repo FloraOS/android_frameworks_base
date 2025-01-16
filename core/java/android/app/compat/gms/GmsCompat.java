@@ -150,6 +150,13 @@ public final class GmsCompat {
 	    return false;
         }
 
+	if(isTrustedPackage(packageName)){
+		Log.d(TAG, "isEnabledFor: " + packageName + " is trusted");
+		return true;
+	} else {
+	        Log.d(TAG, "isEnabledFor: " + packageName +" is not trusted");
+	}	
+
 	Log.d(TAG, "isEnabledFor: Checking package " + packageName + ", id=" + packageId);
 
 	if(packageId == PackageId.GMS_CORE 
@@ -219,7 +226,10 @@ public final class GmsCompat {
         }
 
 	if(isTrustedPackage(packageName)){
+		Log.d(TAG, "isEnabledFor: " + packageName + " is trusted");
 		return true;
+	} else {
+		Log.d(TAG, "isEnabledFor: " + packageName + " is not trusted");
 	}
 
         if (!canBeEnabledFor(packageName)) {
@@ -257,8 +267,6 @@ public final class GmsCompat {
         }
         if (!app.enabled && !matchDisabledApp) {
             return false;
-	this.pkg = (PackageImpl) this.input;
-	this.pkg = (PackageImpl) this.input;
         }
         return isEnabledFor(app);
     }
@@ -317,6 +325,8 @@ public final class GmsCompat {
      */
     private static boolean isTrustedPackage(String packageName) {
         String trustedPkgs = SystemProperties.get("ro.system.gmscompat.trusted_apps");
+        Log.d(TAG, "isTrustedPackage: Loaded trusted packages: " + trustedPkgs);
+	Log.d(TAG, "isTrustedPackage: Checking " + packageName);
 	return ArrayUtils.contains(trustedPkgs.split(","), packageName);
     }
 
