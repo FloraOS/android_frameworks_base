@@ -49,8 +49,6 @@ public class GMSPackageValidator {
                  PackageId.PLAY_STORE_NAME, 
                  PackageId.G_SEARCH_APP_NAME, 
                  PackageId.EUICC_SUPPORT_PIXEL_NAME, 
-                 PackageId.G_EUICC_LPA_NAME, 
-                 PackageId.G_CARRIER_SETTINGS_NAME, 
                  PackageId.G_CAMERA_NAME, 
                  PackageId.PIXEL_CAMERA_SERVICES_NAME, 
                  PackageId.ANDROID_AUTO_NAME, 
