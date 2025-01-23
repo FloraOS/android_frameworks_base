@@ -60,13 +60,24 @@
             >
             <ImageView
                 android:id="@+id/mobile_hd"
-	        android:layout_height="14dp"
+		android:layout_height="@dimen/status_bar_mobile_type_size"
 		android:src="@drawable/ic_hd_calling"
                 android:layout_width="wrap_content"
                 android:layout_gravity="center_vertical"
 		android:adjustViewBounds="true"
 		android:visibility="gone"
 		android:layout_marginEnd="1sp"
+                />
+           <ImageView
+                android:id="@+id/mobile_hd_mock"
+		android:layout_height="@dimen/status_bar_mobile_container_height"
+		android:src="@drawable/ic_hd_calling"
+                android:layout_width="wrap_content"
+                android:layout_gravity="center_vertical"
+		android:adjustViewBounds="true"
+		android:visibility="gone"
+	        android:layout_marginEnd="1sp"
+		android:tint="@android:color/white"
                 />
 
 

@@ -6,10 +6,9 @@
     android:maxWidth="120dp"
     android:minWidth="60dp"
     android:orientation="horizontal"
-    android:gravity="center_vertical|start"
-    android:padding="3dp"
+    android:layout_gravity="center_vertical|start"
+    android:padding="4sp"
     android:layout_marginLeft="3dp"
-    android:layout_marginTop="6sp"
     android:visibility="gone"
     android:background="@drawable/action_chip_container_background">
 
@@ -33,7 +32,8 @@
         android:layout_width="wrap_content"
         android:layout_height="8sp"
         android:layout_weight="1"
-        android:indeterminate="false"
+	android:gravity="center_vertical"
+	android:indeterminate="false"
         android:progress="0"
         android:max="100" />
 

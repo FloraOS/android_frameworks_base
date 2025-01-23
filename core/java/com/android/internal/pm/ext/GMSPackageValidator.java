@@ -48,13 +48,8 @@ public class GMSPackageValidator {
             case PackageId.GMS_CORE_NAME, 
                  PackageId.PLAY_STORE_NAME, 
                  PackageId.G_SEARCH_APP_NAME, 
-                 PackageId.EUICC_SUPPORT_PIXEL_NAME, 
-                 PackageId.G_CAMERA_NAME, 
-                 PackageId.PIXEL_CAMERA_SERVICES_NAME, 
                  PackageId.ANDROID_AUTO_NAME, 
-                 PackageId.TYCHO_NAME, 
-                 PackageId.G_TEXT_TO_SPEECH_NAME, 
-                 PackageId.PIXEL_HEALTH_NAME -> true;
+                 PackageId.G_TEXT_TO_SPEECH_NAME -> true;
             default -> false;
         };
     }
