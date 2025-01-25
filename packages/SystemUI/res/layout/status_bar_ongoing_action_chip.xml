@@ -15,8 +15,8 @@
 
     <ImageView
         android:id="@+id/ongoing_action_app_icon"
-        android:layout_width="10sp"
-        android:layout_height="10sp"
+        android:layout_width="8sp"
+        android:layout_height="8sp"
 	android:contentDescription="App icon"
 	android:gravity="center_vertical|start"
 	android:scaleType="centerInside"
