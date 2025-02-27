@@ -14,6 +14,7 @@ import android.util.Log;
 import android.util.TypedValue;
 
 import com.android.systemui.statusbar.NotificationListener;
+import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.res.R;
 import com.android.systemui.util.IconFetcher;
 
@@ -23,7 +24,7 @@ import javax.inject.Inject;
  * Controls the ongoing progress chip based on notifcations
  * @LineageExtension
  */
-public class OnGoingActionProgressController implements NotificationListener.NotificationHandler{
+public class OnGoingActionProgressController implements NotificationListener.NotificationHandler, KeyguardStateController.Callback{
 	private static final String TAG = "OngoingActionProgressController";
 
 	private Context mContext;
@@ -33,8 +34,12 @@ public class OnGoingActionProgressController implements NotificationListener.Not
 	private final View mProgressRootView;
 	private final ImageView mIconView;
 
+	// Keyguard state
+	private final KeyguardStateController mKeyguardStateController;
+
 	// Progress tracking variables
 	private boolean mIsTrackingProgress = false;
+	private boolean mIsForceHidden = false;
 	private int mCurrentProgress = 0;
 	private int mCurrentProgressMax = 0;
 	private Drawable mCurrentDrawable = null;
@@ -54,7 +59,9 @@ public class OnGoingActionProgressController implements NotificationListener.Not
 	 * Creates controller for ongoing progress notifications
 	 * @param View status bar View object to find progress chip
 	 */
-	public OnGoingActionProgressController(Context context, View statusBarView, NotificationListener notificationListener){
+	public OnGoingActionProgressController(Context context, View statusBarView, 
+			NotificationListener notificationListener,
+			KeyguardStateController keyguardStateController){
 	        if(statusBarView == null){
 			Log.wtf(TAG, "StatusBarView is null");
 		}
@@ -62,6 +69,8 @@ public class OnGoingActionProgressController implements NotificationListener.Not
 		if(mNotificationListener == null){
 			Log.wtf(TAG, "mNotificationListener is null");
 		}
+		mKeyguardStateController = keyguardStateController;
+		keyguardStateController.addCallback(this);
 		mContext = context;
 		mProgressBar = statusBarView.findViewById(R.id.app_action_progress);
 		mProgressRootView = statusBarView.findViewById(R.id.status_bar_ongoing_action_chip);
@@ -80,7 +89,7 @@ public class OnGoingActionProgressController implements NotificationListener.Not
 	       return extras.containsKey(Notification.EXTRA_PROGRESS)
                       && extras.containsKey(Notification.EXTRA_PROGRESS_MAX)
 		      && !indeterminate
-		      && maxProgress > 0; //Whatever happens to notifications with maxProgress == 0 it happens totally wrong, but still it happens
+		      && (maxProgress > 0); //Whatever happens to notifications with maxProgress == 0 it happens totally wrong, but still it happens
 
 	}
 
@@ -139,6 +148,10 @@ public class OnGoingActionProgressController implements NotificationListener.Not
 	 * @AsyncUnsafe
 	 */
 	private void updateViews(){
+		if(mIsForceHidden){ // Keyguard locked, user-disabled, etc.
+			mProgressRootView.setVisibility(View.GONE);
+			return;
+		}
 		if(!mIsTrackingProgress){
 			mProgressRootView.setVisibility(View.GONE);
 		} else {
@@ -171,6 +184,7 @@ public class OnGoingActionProgressController implements NotificationListener.Not
 				Log.d(TAG, "Tracked notification has lost progress");
 				synchronized(this){
 				    mIsTrackingProgress = false;
+				    mCurrentDrawable = null;
 				    updateViews();
 				}
 			}
@@ -202,6 +216,16 @@ public class OnGoingActionProgressController implements NotificationListener.Not
 		}
 	}
 
+	/**
+	 * Sets hide chip override
+	 * @param forceHidden if setted to true the chip would not be visible under any cricumctances
+	 */
+	public void setForceHidden(final boolean forceHidden){
+	        Log.d(TAG, "setForceHidden " + forceHidden);
+		mIsForceHidden = forceHidden;
+		updateViews();
+	}
+
 	//Implementation of notification handler
 	@Override
 	public void onNotificationPosted(StatusBarNotification sbn, NotificationListenerService.RankingMap _rankingMap){
@@ -228,4 +252,9 @@ public class OnGoingActionProgressController implements NotificationListener.Not
 		/*stub*/
 	}
 
+	// Callback from keyguard state
+	@Override
+	public void onKeyguardShowingChanged(){
+		setForceHidden(mKeyguardStateController.isShowing());
+	}
 }
